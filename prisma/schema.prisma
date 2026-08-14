@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum Role {
+  SHIPPER
+  TRANSPORTER
+  ADMIN
+}
+
+enum LoadStatus {
+  OPEN
+  BIDDING_CLOSED
+  IN_TRANSIT
+  ARRIVED
+  DELIVERED
+  CANCELLED
+}
+
+enum MaterialType {
+  STEEL
+  PHARMA
+  AGRI
+  MACHINERY
+  ELECTRONICS
+  CHEMICALS
+  TEXTILE
+  FMCG
+  OTHER
+}
+
+enum PackagingType {
+  PALLETS
+  CRATES
+  LOOSE
+  DRUMS
+  BAGS
+  BOXES
+}
+
+enum BidStatus {
+  ACTIVE
+  OUTBID
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum TransactionType {
+  ESCROW_HOLD
+  ESCROW_RELEASE
+  PLATFORM_FEE
+  REFUND
+}
+
+// ─── MODELS ──────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(SHIPPER)
+  phone         String?
+  companyName   String?
+  gstNumber     String?
+  kycStatus     KYCStatus @default(PENDING)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts      Account[]
+  sessions      Session[]
+  loads         Load[]          @relation("ShipperLoads")
+  bids          Bid[]
+  wallet        Wallet?
+  documents     Document[]
+  transporterProfile TransporterProfile?
+
+  @@index([role])
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model TransporterProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  vehicleNumber  String?
+  vehicleType    String?
+  capacity       Float?
+  totalTrips     Int      @default(0)
+  rating         Float    @default(0)
+  ratingCount    Int      @default(0)
+  isAvailable    Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Load {
+  id               String       @id @default(cuid())
+  loadNumber       String       @unique // e.g. FF-2847
+  shipperId        String
+  status           LoadStatus   @default(OPEN)
+
+  // Route
+  pickupAddress    String
+  pickupLat        Float?
+  pickupLng        Float?
+  dropAddress      String
+  dropLat          Float?
+  dropLng          Float?
+  distance         Float?       // in km
+
+  // Cargo
+  materialType     MaterialType
+  packagingType    PackagingType
+  weight           Float        // in MT
+  description      String?
+  specialInstructions String?
+  isFragile        Boolean      @default(false)
+  isTarpRequired   Boolean      @default(false)
+  labourRequired   Boolean      @default(false)
+
+  // Bid window
+  basePrice        Float?
+  biddingClosesAt  DateTime
+  acceptedBidId    String?      @unique
+
+  // Timestamps
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  inTransitAt      DateTime?
+  deliveredAt      DateTime?
+
+  // Relations
+  shipper          User         @relation("ShipperLoads", fields: [shipperId], references: [id])
+  bids             Bid[]
+  acceptedBid      Bid?         @relation("AcceptedBid", fields: [acceptedBidId], references: [id])
+  documents        Document[]
+  escrowTransaction EscrowTransaction?
+  invoice          Invoice?
+
+  @@index([shipperId])
+  @@index([status])
+  @@index([biddingClosesAt])
+}
+
+model Bid {
+  id             String    @id @default(cuid())
+  loadId         String
+  transporterId  String
+  amount         Float
+  status         BidStatus @default(ACTIVE)
+  note           String?
+  submittedAt    DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Rate limiting — track last bid modification time
+  lastModifiedAt DateTime  @default(now())
+
+  // Relations
+  load           Load      @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  transporter    User      @relation(fields: [transporterId], references: [id])
+  acceptedForLoad Load?    @relation("AcceptedBid")
+
+  @@unique([loadId, transporterId])
+  @@index([loadId])
+  @@index([transporterId])
+  @@index([amount])
+}
+
+model EscrowTransaction {
+  id          String          @id @default(cuid())
+  loadId      String          @unique
+  amount      Float
+  type        TransactionType
+  isReleased  Boolean         @default(false)
+  heldAt      DateTime        @default(now())
+  releasedAt  DateTime?
+
+  load        Load            @relation(fields: [loadId], references: [id])
+  wallet      Wallet?         @relation(fields: [walletId], references: [id])
+  walletId    String?
+}
+
+model Wallet {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  balance      Float    @default(0)
+  totalEarned  Float    @default(0)
+  totalPaid    Float    @default(0)
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions EscrowTransaction[]
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  userId     String?
+  loadId     String?
+  name       String
+  type       String   // RC, DL, Insurance, POD, Invoice
+  url        String
+  uploadedAt DateTime @default(now())
+
+  user       User?    @relation(fields: [userId], references: [id])
+  load       Load?    @relation(fields: [loadId], references: [id])
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  loadId      String   @unique
+  invoiceNo   String   @unique
+  amount      Float
+  gstAmount   Float
+  totalAmount Float
+  pdfUrl      String?
+  issuedAt    DateTime @default(now())
+
+  load        Load     @relation(fields: [loadId], references: [id])
+}
