@@ -151,7 +151,7 @@ async function ActiveBids({ transporterId }: { transporterId: string }) {
         <p className="text-xs text-[var(--muted-foreground)] mt-1">
           Find loads and start bidding
         </p>
-        <Button size="sm" className="mt-3" render={<Link href={"/transporter/loads" as Route}/>}>
+        <Button size="sm" className="mt-3" nativeButton={false} render={<Link href={"/transporter/loads" as Route}/>}>
           Browse Loads
         </Button>
       </div>
@@ -288,7 +288,7 @@ export default async function TransporterDashboardPage() {
               <Gavel className="size-4 text-[var(--muted-foreground)]" />
               Your Active Bids
             </h3>
-            <Button variant="ghost" size="sm" className="text-xs h-7" render={<Link href={"/transporter/bids" as Route}/>}>
+            <Button variant="ghost" size="sm" className="text-xs h-7" nativeButton={false} render={<Link href={"/transporter/bids" as Route}/>}>
               View all
             </Button>
           </div>
@@ -303,7 +303,7 @@ export default async function TransporterDashboardPage() {
               <TrendingUp className="size-4 text-[var(--muted-foreground)]" />
               Open Loads Near You
             </h3>
-            <Button variant="ghost" size="sm" className="text-xs h-7" render ={<Link href={"/transporter/loads" as Route}/>}>
+            <Button variant="ghost" size="sm" className="text-xs h-7" nativeButton={false} render ={<Link href={"/transporter/loads" as Route}/>}>
               Browse all
             </Button>
           </div>
