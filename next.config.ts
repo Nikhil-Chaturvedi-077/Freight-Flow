@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Next.js 16: Partial Prerendering / Cache Components
-  cacheComponents: true,
+  // cacheComponents: true,
 
   // Typed routes
   typedRoutes: true,
