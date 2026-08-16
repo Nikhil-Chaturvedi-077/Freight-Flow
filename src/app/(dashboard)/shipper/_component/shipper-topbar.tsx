@@ -10,6 +10,7 @@ import {
 } from "@/components/layout/topbar-shell";
 import Link from "next/link";
 import { Route } from "next";
+import { RealtimeStatus } from "@/components/layout/realtime-status";
 
 // Map pathnames to breadcrumb titles
 const BREADCRUMBS: Record<string, string> = {
@@ -30,6 +31,7 @@ export function ShipperTopbar() {
   return (
     <TopbarShell>
       <TopbarLeft>
+      <RealtimeStatus />
         {/* Live ping */}
         <div className="flex items-center gap-1.5">
           <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />

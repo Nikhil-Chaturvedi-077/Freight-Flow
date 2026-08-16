@@ -8,6 +8,7 @@ import { NotificationBell } from "@/components/layout/notification-bell";
 import { TopbarShell, TopbarLeft, TopbarRight } from "@/components/layout/topbar-shell";
 import Link from "next/link";
 import { Route } from "next";
+import { RealtimeStatus } from "@/components/layout/realtime-status";
 
 const BREADCRUMBS: Record<string, string> = {
   "/transporter": "Dashboard",
@@ -27,6 +28,7 @@ export function TransporterTopbar() {
   return (
     <TopbarShell>
       <TopbarLeft>
+      <RealtimeStatus />
         <div className="flex items-center gap-1.5">
           <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs text-[var(--muted-foreground)] hidden sm:block">

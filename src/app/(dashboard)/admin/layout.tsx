@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SidebarShell } from "@/components/layout/sidebar-shell";
 import { AdminSidebar } from "./_components/admin-sidebar";
 import { AdminTopbar } from "./_components/admin-topbar";
+import { SocketProvider } from "@/components/providers/socket-provider";
 import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({
@@ -21,6 +22,7 @@ export default async function AdminLayout({
   ]);
 
   return (
+    <SocketProvider userId={session.user.id}>
     <SidebarShell>
       <AdminSidebar
         session={session}
@@ -32,5 +34,6 @@ export default async function AdminLayout({
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">{children}</main>
       </div>
     </SidebarShell>
+    </SocketProvider>
   );
 }

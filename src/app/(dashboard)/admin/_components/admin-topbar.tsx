@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { NotificationBell } from "@/components/layout/notification-bell";
 import { TopbarShell, TopbarLeft, TopbarRight } from "@/components/layout/topbar-shell";
 import { Badge } from "@/components/ui/badge";
+import { RealtimeStatus } from "@/components/layout/realtime-status";
 
 const BREADCRUMBS: Record<string, string> = {
   "/admin": "Command Center",
@@ -24,6 +25,7 @@ export function AdminTopbar() {
   return (
     <TopbarShell>
       <TopbarLeft>
+      <RealtimeStatus />
         <Badge
           variant="outline"
           className="text-[10px] h-5 px-2 bg-amber-500/10 text-amber-600 border-amber-500/20"
