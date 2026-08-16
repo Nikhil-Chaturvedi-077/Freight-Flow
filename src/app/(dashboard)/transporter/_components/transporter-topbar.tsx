@@ -29,12 +29,6 @@ export function TransporterTopbar() {
     <TopbarShell>
       <TopbarLeft>
       <RealtimeStatus />
-        <div className="flex items-center gap-1.5">
-          <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs text-[var(--muted-foreground)] hidden sm:block">
-            Live
-          </span>
-        </div>
         <div className="h-4 w-px bg-[var(--border)]" />
         <h2 className="text-sm font-medium">{title}</h2>
       </TopbarLeft>
