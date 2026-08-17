@@ -9,6 +9,8 @@ export interface LeaderboardEntry {
   amount: number;
   status: "LEADING" | "OUTBID";
   submittedAt: string;
+  rating : number;
+  totalTrips : number;
 }
 
 export interface BidPlacedPayload {

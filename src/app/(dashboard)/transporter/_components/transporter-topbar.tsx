@@ -34,7 +34,7 @@ export function TransporterTopbar() {
       </TopbarLeft>
 
       <TopbarRight>
-        <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs hidden sm:flex" render={<Link href={"/transporter/loads" as Route}/>}>
+        <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs hidden sm:flex" nativeButton={false} render={<Link href={"/transporter/loads" as Route}/>}>
             <Search className="size-3.5" />
             Find Loads
         </Button>

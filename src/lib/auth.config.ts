@@ -1,44 +1,43 @@
 import type { NextAuthConfig } from "next-auth";
-import Google from "next-auth/providers/google";
+import type { Role } from "@prisma/client";
 
-export default {
+export const authConfig = {
   pages: {
     signIn: "/login",
     error: "/login",
   },
 
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
+  session: {
+    strategy: "jwt",
+  },
 
   callbacks: {
-    authorized({ auth }) {
-      return !!auth?.user;
-    },
-
-    jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // User login ke time
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.companyName = user.companyName;
+      }
+
+      // Session update ke time role update
+      if (trigger === "update" && session?.user?.role) {
+        token.role = session.user.role;
       }
 
       return token;
     },
 
-    session({ session, token }) {
-      if (token) {
+    async session({ session, token }) {
+      if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as any;
-        session.user.companyName = token.companyName as
-          | string
-          | undefined;
+        session.user.role = token.role as Role;
       }
 
       return session;
     },
   },
+
+  // IMPORTANT:
+  // Middleware/Edge ke liye providers empty.
+  providers: [],
 } satisfies NextAuthConfig;

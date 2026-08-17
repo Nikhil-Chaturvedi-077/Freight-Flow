@@ -28,6 +28,10 @@ export function formatRelativeTime(date: Date): string {
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
+export function formatRelative(date: Date | string): string {
+  return formatDistanceToNow(new Date(date), { addSuffix: true });
+}
+
 export function isBiddingExpired(closesAt: Date): boolean {
   return isPast(closesAt);
 }
