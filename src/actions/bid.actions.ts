@@ -267,9 +267,7 @@ export async function acceptBid(
       },
     });
 
-    if (!load) {
-      return { success: false, error: "Load not found" };
-    }
+    if (!load) return { success: false, error: "Load not found" };
     if (load.shipperId !== session.user.id) {
       return { success: false, error: "Unauthorized" };
     }
@@ -288,9 +286,7 @@ export async function acceptBid(
       },
     });
 
-    if (!bid) {
-      return { success: false, error: "Bid not found" };
-    }
+    if (!bid) return { success: false, error: "Bid not found" };
     if (bid.loadId !== loadId) {
       return { success: false, error: "Bid does not belong to this load" };
     }
@@ -320,7 +316,23 @@ export async function acceptBid(
       data: { status: "REJECTED" },
     });
 
-    // ── Step 6: Socket emits (non-blocking) ───────────────
+    // ── Step 6: Hold escrow automatically ──────────────
+    const existingEscrow = await prisma.escrowTransaction.findUnique({
+      where: { loadId },
+    });
+
+    if (!existingEscrow) {
+      await prisma.escrowTransaction.create({
+        data: {
+          loadId,
+          amount: bid.amount,
+          type: "ESCROW_HOLD",
+          isReleased: false,
+        },
+      });
+    }
+
+    // ── Step 7: Socket emits (non-blocking) ───────────────
     await socketEmit("/emit/bid-accepted", {
       loadId,
       transporterId: bid.transporterId,
@@ -332,13 +344,9 @@ export async function acceptBid(
       },
     });
 
-    // Notify all other bidders they were rejected
+    // Notify all other rejected bidders
     const rejectedBids = await prisma.bid.findMany({
-      where: {
-        loadId,
-        id: { not: bidId },
-        status: "REJECTED",
-      },
+      where: { loadId, id: { not: bidId }, status: "REJECTED" },
       select: { transporterId: true },
     });
 
@@ -350,7 +358,7 @@ export async function acceptBid(
             id: `notif-${Date.now()}-${rb.transporterId}`,
             userId: rb.transporterId,
             title: "Bid not selected",
-            body: `Another transporter was selected for load ${load.loadNumber}`,
+            body: `Another transporter was selected for ${load.loadNumber}`,
             type: "bid",
             createdAt: new Date().toISOString(),
           },
@@ -360,6 +368,7 @@ export async function acceptBid(
 
     revalidatePath(`/shipper/loads/${loadId}`);
     revalidatePath("/shipper/bids");
+    revalidatePath("/shipper/wallet");
 
     return { success: true, data: undefined };
   } catch (err) {

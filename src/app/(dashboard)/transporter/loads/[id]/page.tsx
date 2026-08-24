@@ -3,18 +3,20 @@ import { redirect, notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { BidLeaderboard } from "@/components/bids/bid-leaderboard";
 import { BidForm } from "@/components/bids/bid-form";
+import { PodForm } from "@/components/loads/pod-form";
 import { LoadStatusBadge } from "@/components/loads/load-status-badge";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import {
-  Package, MapPin, Weight, Clock,
-  AlertTriangle, Droplets, Users,
-  ArrowLeft, Building2,
+  Package, MapPin, AlertTriangle,
+  Droplets, Users, Clock,
+  ArrowLeft, Building2, CheckCircle,
 } from "lucide-react";
 import {
   formatCurrency,
   formatDateTime,
   formatCountdown,
+  cn,
 } from "@/lib/utils";
 import { getLoadLeaderboard } from "@/actions/bid.actions";
 import Link from "next/link";
@@ -53,14 +55,24 @@ export default async function TransporterLoadDetailPage({
             companyName: true,
           },
         },
+        acceptedBid: {
+          select: {
+            transporterId: true,
+            amount: true,
+          },
+        },
       },
     }),
     getLoadLeaderboard(id),
   ]);
 
   if (!load) notFound();
-  if (load.status !== "OPEN" && load.status !== "BIDDING_CLOSED") {
-    redirect("/transporter/loads" as Route);
+
+  // Only show OPEN or assigned loads
+  if (
+    load.status === "CANCELLED"
+  ) {
+    redirect("/transporter/loads");
   }
 
   // Get this transporter's existing bid
@@ -85,17 +97,28 @@ export default async function TransporterLoadDetailPage({
   const countdown = formatCountdown(load.biddingClosesAt);
   const isUrgent =
     !isClosed &&
-    new Date(load.biddingClosesAt).getTime() - Date.now() < 2 * 60 * 60 * 1000;
+    new Date(load.biddingClosesAt).getTime() - Date.now() 
+      2 * 60 * 60 * 1000;
+
+  // Is this load assigned to this transporter?
+  const isMyLoad =
+    load.acceptedBid?.transporterId === session.user.id;
+
+  // Show PoD form if load is assigned to this transporter
+  // and status is BIDDING_CLOSED, IN_TRANSIT, or ARRIVED
+  const showPodForm =
+    isMyLoad &&
+    ["BIDDING_CLOSED", "IN_TRANSIT", "ARRIVED"].includes(load.status);
 
   return (
     <div className="max-w-screen-lg space-y-5">
-      {/* Back button */}
+      {/* Back */}
       <Button
         variant="ghost"
         size="sm"
         className="gap-1.5 text-xs h-7 text-[var(--muted-foreground)] -mb-2"
         nativeButton={false}
-        render = {<Link href={"/transporter/loads" as Route}/>}
+        render={<Link href="/transporter/loads"/>}
       >
           <ArrowLeft className="size-3.5" />
           Back to loads
@@ -106,7 +129,7 @@ export default async function TransporterLoadDetailPage({
       </PageHeader>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* ── Left col — Load info ── */}
+        {/* ── Left — Load Info ── */}
         <div className="lg:col-span-2 space-y-4">
           {/* Shipper info */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
@@ -119,7 +142,7 @@ export default async function TransporterLoadDetailPage({
                   {load.shipper.companyName ?? load.shipper.name}
                 </p>
                 <p className="text-xs text-[var(--muted-foreground)]">
-                  Shipper · Posted {formatDateTime(load.createdAt)}
+                  Posted {formatDateTime(load.createdAt)}
                 </p>
               </div>
             </div>
@@ -158,7 +181,7 @@ export default async function TransporterLoadDetailPage({
             </div>
           </div>
 
-          {/* Cargo details */}
+          {/* Cargo */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5 space-y-4">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <Package className="size-4 text-[var(--muted-foreground)]" />
@@ -166,8 +189,14 @@ export default async function TransporterLoadDetailPage({
             </h3>
             <div className="grid grid-cols-3 gap-4">
               {[
-                { label: "Material", value: load.materialType.toLowerCase() },
-                { label: "Packaging", value: load.packagingType.toLowerCase() },
+                {
+                  label: "Material",
+                  value: load.materialType.toLowerCase(),
+                },
+                {
+                  label: "Packaging",
+                  value: load.packagingType.toLowerCase(),
+                },
                 { label: "Weight", value: `${load.weight} MT` },
               ].map((item) => (
                 <div key={item.label} className="space-y-1">
@@ -181,7 +210,7 @@ export default async function TransporterLoadDetailPage({
               ))}
             </div>
 
-            {/* Special flags */}
+            {/* Flags */}
             <div className="flex flex-wrap gap-2">
               {load.isFragile && (
                 <span className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-600 border border-amber-500/20 font-medium">
@@ -203,7 +232,6 @@ export default async function TransporterLoadDetailPage({
               )}
             </div>
 
-            {/* Description */}
             {load.description && (
               <div className="pt-3 border-t border-[var(--border)]">
                 <p className="text-xs text-[var(--muted-foreground)] mb-1">
@@ -213,7 +241,6 @@ export default async function TransporterLoadDetailPage({
               </div>
             )}
 
-            {/* Special instructions */}
             {load.specialInstructions && (
               <div className="pt-3 border-t border-[var(--border)]">
                 <p className="text-xs text-[var(--muted-foreground)] mb-1">
@@ -223,6 +250,37 @@ export default async function TransporterLoadDetailPage({
               </div>
             )}
           </div>
+
+          {/* ✅ Proof of Delivery Form — show for assigned transporter */}
+          {showPodForm && (
+            <PodForm
+              loadId={load.id}
+              loadNumber={load.loadNumber}
+              currentStatus={load.status}
+            />
+          )}
+
+          {/* Delivered confirmation */}
+          {load.status === "DELIVERED" && isMyLoad && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5 text-center space-y-2">
+              <CheckCircle className="size-8 text-emerald-500 mx-auto" />
+              <p className="text-sm font-semibold text-emerald-600">
+                Delivery Completed!
+              </p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Payment of{" "}
+                <span className="font-semibold">
+                  {formatCurrency(
+                    (load.acceptedBid?.amount ?? 0) * 0.975
+                  )}
+                </span>{" "}
+                has been released to your wallet.
+              </p>
+              <Button size="sm" variant="outline" nativeButton={false} render={<Link href={"/transporter/wallet" as Route}/>} className="mt-2">
+                View Wallet
+              </Button>
+            </div>
+          )}
 
           {/* Leaderboard */}
           <BidLeaderboard
@@ -239,19 +297,19 @@ export default async function TransporterLoadDetailPage({
               transporterName: b.transporterName,
               companyName: b.companyName,
               amount: b.amount,
+              rating: b.rating,
+              totalTrips: b.totalTrips,
               status:
                 i === 0
                   ? ("LEADING" as const)
                   : ("OUTBID" as const),
               submittedAt: b.submittedAt,
-              rating: b.rating,
-              totalTrips: b.totalTrips,
             }))}
             initialTotalBids={leaderboard.length}
           />
         </div>
 
-        {/* ── Right col — Bid area ── */}
+        {/* ── Right — Bid Area ── */}
         <div className="space-y-4">
           {/* Bidding window info */}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4 space-y-3">
@@ -273,13 +331,14 @@ export default async function TransporterLoadDetailPage({
                   Time left
                 </span>
                 <span
-                  className={
+                  className={cn(
+                    "font-medium",
                     isClosed
-                      ? "text-red-500 font-medium"
+                      ? "text-red-500"
                       : isUrgent
                       ? "text-amber-500 font-semibold animate-pulse"
-                      : "font-medium"
-                  }
+                      : ""
+                  )}
                 >
                   {isClosed ? "Closed" : countdown}
                 </span>
@@ -316,7 +375,7 @@ export default async function TransporterLoadDetailPage({
             </div>
           )}
 
-          {/* Bid form */}
+          {/* Bid form — only for open loads */}
           {load.status === "OPEN" && (
             <BidForm
               loadId={load.id}
@@ -334,14 +393,22 @@ export default async function TransporterLoadDetailPage({
             />
           )}
 
-          {/* Already won message */}
-          {load.status === "BIDDING_CLOSED" && myBid?.status === "ACCEPTED" && (
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-center space-y-1">
-              <p className="text-sm font-semibold text-emerald-600">
-                🎉 You won this load!
+          {/* Won load message */}
+          {load.status === "BIDDING_CLOSED" && isMyLoad && (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
+              <p className="text-sm font-semibold text-emerald-600 flex items-center gap-2">
+                <CheckCircle className="size-4" />
+                You won this load!
               </p>
               <p className="text-xs text-[var(--muted-foreground)]">
-                Await shipper instructions for pickup
+                Winning bid:{" "}
+                <span className="font-semibold">
+                  {formatCurrency(load.acceptedBid?.amount ?? 0)}
+                </span>
+              </p>
+              <p className="text-xs text-[var(--muted-foreground)]">
+                Proceed to pickup and use the Proof of Delivery
+                section below to confirm delivery.
               </p>
             </div>
           )}
@@ -349,19 +416,13 @@ export default async function TransporterLoadDetailPage({
           {/* Not selected */}
           {load.status === "BIDDING_CLOSED" &&
             myBid &&
-            myBid.status !== "ACCEPTED" && (
-              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4 text-center space-y-1">
+            myBid.status === "REJECTED" && (
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 p-4 text-center space-y-2">
                 <p className="text-sm font-medium text-[var(--muted-foreground)]">
                   Another transporter was selected
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  nativeButton={false}
-                  render={<Link href={"/transporter/loads" as Route}/>}
-                >
-                  Find more loads
+                <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/transporter/loads"/>}>
+                    Find more loads
                 </Button>
               </div>
             )}
