@@ -1,3 +1,136 @@
+export const TASK_STATUS_CONFIG = {
+  BACKLOG: {
+    label: "Backlog",
+    color: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+    dot: "bg-slate-400",
+  },
+  TODO: {
+    label: "To Do",
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    dot: "bg-blue-400",
+  },
+  IN_PROGRESS: {
+    label: "In Progress",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+    dot: "bg-amber-400",
+  },
+  IN_REVIEW: {
+    label: "In Review",
+    color: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    dot: "bg-purple-400",
+  },
+  DONE: {
+    label: "Done",
+    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+    dot: "bg-emerald-400",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    color: "bg-red-500/10 text-red-500 border-red-500/20",
+    dot: "bg-red-400",
+  },
+} as const;
+
+export const TASK_PRIORITY_CONFIG = {
+  NONE: {
+    label: "No priority",
+    color: "text-slate-400",
+    icon: "Minus",
+  },
+  LOW: {
+    label: "Low",
+    color: "text-blue-400",
+    icon: "ArrowDown",
+  },
+  MEDIUM: {
+    label: "Medium",
+    color: "text-amber-400",
+    icon: "ArrowRight",
+  },
+  HIGH: {
+    label: "High",
+    color: "text-orange-500",
+    icon: "ArrowUp",
+  },
+  URGENT: {
+    label: "Urgent",
+    color: "text-red-500",
+    icon: "AlertCircle",
+  },
+} as const;
+
+export const INVOICE_STATUS_CONFIG = {
+  DRAFT: {
+    label: "Draft",
+    color: "bg-slate-500/10 text-slate-500 border-slate-500/20",
+  },
+  SENT: {
+    label: "Sent",
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  },
+  PAID: {
+    label: "Paid",
+    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  },
+  OVERDUE: {
+    label: "Overdue",
+    color: "bg-red-500/10 text-red-500 border-red-500/20",
+  },
+  CANCELLED: {
+    label: "Cancelled",
+    color: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  },
+} as const;
+
+export const PROJECT_STATUS_CONFIG = {
+  ACTIVE: {
+    label: "Active",
+    color: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  },
+  ON_HOLD: {
+    label: "On Hold",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  },
+  COMPLETED: {
+    label: "Completed",
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  },
+  ARCHIVED: {
+    label: "Archived",
+    color: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  },
+} as const;
+
+export const WORKSPACE_ROLE_CONFIG = {
+  OWNER: {
+    label: "Owner",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  },
+  ADMIN: {
+    label: "Admin",
+    color: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+  },
+  MEMBER: {
+    label: "Member",
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  },
+  VIEWER: {
+    label: "Viewer",
+    color: "bg-slate-500/10 text-slate-400 border-slate-500/20",
+  },
+} as const;
+
+export const PROJECT_COLORS = [
+  "#3b82f6", "#8b5cf6", "#10b981", "#f59e0b",
+  "#ef4444", "#ec4899", "#06b6d4", "#84cc16",
+] as const;
+
+export const PLAN_LIMITS = {
+  FREE: { members: 3, projects: 5, storage: 1 },
+  PRO: { members: 25, projects: 50, storage: 20 },
+  ENTERPRISE: { members: Infinity, projects: Infinity, storage: 100 },
+} as const;
+
 export const LOAD_STATUS_CONFIG = {
   OPEN: {
     label: "Open",
