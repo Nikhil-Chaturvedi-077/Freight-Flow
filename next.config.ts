@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   // cacheComponents: true,
 
   // Typed routes
-  typedRoutes: true,
+  // typedRoutes: true,
 
   images: {
     remotePatterns: [
