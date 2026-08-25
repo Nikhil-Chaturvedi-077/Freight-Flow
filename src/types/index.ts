@@ -118,8 +118,8 @@ export type TransporterWithProfile = User & {
 
 // ── Server Action return types ──
 export type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+  | { success: true; data: T; error?: never }
+  | { success: false; error: string; data?: never };
 
 // ── Dashboard metric types ──
 export type ShipperMetrics = {

@@ -66,7 +66,7 @@ export function LoginForm() {
                 ? "/admin"
                 : "/");
 
-        router.push(destination);
+        router.push(destination as import("next").Route);
         router.refresh();
       } catch {
         setError("Something went wrong. Please try again.");
