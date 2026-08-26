@@ -1,8 +1,9 @@
 # Freight Flow
 
 > **A full-stack freight marketplace and logistics management platform connecting shippers with transporters through competitive bidding, secure payments, and end-to-end load management.**
-
 Freight Flow is a modern logistics platform designed to simplify freight transportation by bringing **shippers, transporters, and administrators** onto a single platform.
+>
+🌐 [Live Demo](https://freight-flow-aq2v.onrender.com)
 
 Shippers can create and manage freight loads, transporters can discover loads and place competitive bids, and the platform manages the complete lifecycle from **load creation → bidding → acceptance → transportation → delivery → invoicing**.
 
